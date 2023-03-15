@@ -21,20 +21,20 @@ function [scenario, egoVehicle, roads] = scenariosetup(sampleTime, stopTime, ego
     road(scenario, roadCenters, 'Name', 'Road', 'Lanes', laneSpecification);
     roads =[roads;roadCenters];
 
-    roadCenters = [0 0 0;
-        0 130 0];
+    roadCenters = [5 0 0;
+        5 130 0];
     laneSpecification = lanespec([1,1], 'Width', 5);
     road(scenario, roadCenters, 'Name', 'Road', 'Lanes', laneSpecification);
     roads =[roads;roadCenters];
     
-    roadCenters = [50 0 0;
-        50 130 0];
+    roadCenters = [55 0 0;
+        55 130 0];
     laneSpecification = lanespec([1,1], 'Width', 5);
     road(scenario, roadCenters, 'Name', 'Road', 'Lanes', laneSpecification);
     roads =[roads;roadCenters];
     
-    roadCenters = [100 0 0;
-        100 130 0];
+    roadCenters = [105 0 0;
+        105 130 0];
     laneSpecification = lanespec([1,1], 'Width', 5);
     road(scenario, roadCenters, 'Name', 'Road', 'Lanes', laneSpecification);
     roads =[roads;roadCenters];

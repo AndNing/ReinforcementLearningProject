@@ -4,7 +4,7 @@ seed = 1;
 s = rng(seed);
 
 egoVehiclePositionOffset = 1;
-egoVehiclePosition = [-60 - egoVehiclePositionOffset 97.5 0];
+egoVehiclePosition = [0 5 0];
 
 numActorVehicles = 3;
 actorVehicleMinSpeed = 1;
