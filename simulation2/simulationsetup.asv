@@ -4,11 +4,13 @@ seed = 1;
 s = rng(seed);
 
 egoVehiclePositionOffset = 1;
-egoVehiclePosition = [-60 - egoVehiclePositionOffset 97.5 0];
+egoVehiclePosition = [0 5 0];
 
 numActorVehicles = 3;
 actorVehicleMinSpeed = 1;
 actorVehicleMaxSpeed = 5;
+
+rewardValues
 
 
 [scenario, egoVehicle, roads] = scenariosetup(sampleTime, stopTime, egoVehiclePosition);
@@ -50,7 +52,7 @@ xlim([-50 190])
 ylim([-85 330])
 hold off
 
-roiPolygon = [-65 115; 65 115; 65 -15; -65 -15;];
+roiPolygon = [0 130; 130 130; 130 0; 0 0;];
 numPoints1 = 1;
 goalSet1 = helperSamplePositions(scenario,numPoints1,'ROI',roiPolygon);
 

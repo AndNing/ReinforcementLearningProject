@@ -1,28 +1,7 @@
-function [roadGrid, countGrid] = calculategrid(scenario, roads)
-    rmax = max(roads);
-    rmin = min(roads);
-    rdist = rmax - rmin;
-    gridsize = rdist / 10;
-
-    roadGrid = zeros(gridsize(1),gridsize(2));
-
-    for i=1:size(roads,1)/2
-        roadStart = roads(2*i-1,1:2);
-        roadEnd = roads(2*i,1:2);
-
-        if (roadStart(2) - roadEnd(2)) == 0
-            roadColumn = ((roadStart(2) - 5)/10) + 1;
-            roadGrid(:,roadColumn) = 1;
-        else
-            roadRow = ((roadStart(1) - 5)/10) + 1;
-%             disp(roadRow);
-            roadGrid(roadRow,:) = 1;
-        end
-    end
-    roadGrid = flip(flip(roadGrid),2);
-
+function [countGrid,roadGrid, egoVehicleGridPosition] = calculategrid(scenario, roadGrid, gridsize)
     egoVehiclePosition = scenario.Actors(1).Position;
     egoVehicleGridPosition = ceil(egoVehiclePosition/10);
+    egoVehicleGridPosition = egoVehicleGridPosition(1:2);
     roadGrid(egoVehicleGridPosition(1),egoVehicleGridPosition(2)) = 2;
 
 

@@ -1,14 +1,20 @@
 sampleTime = 0.1;
-stopTime = 20;
+stopTime = 50;
 seed = 1;
 s = rng(seed);
 
 egoVehiclePositionOffset = 1;
-egoVehiclePosition = [0 5 0];
+egoVehiclePosition = [5 5 0];
 
 numActorVehicles = 3;
 actorVehicleMinSpeed = 1;
 actorVehicleMaxSpeed = 5;
+
+rewardValues.offroad = -10000;
+rewardValues.time = -1;
+rweardValues.vehicle = -50;
+
+goalGridPosition = [1,1];
 
 
 [scenario, egoVehicle, roads] = scenariosetup(sampleTime, stopTime, egoVehiclePosition);
@@ -116,7 +122,31 @@ title('Generated Scenario')
 % hold off
 % Run the simulation
 
-% while simulate(scenario)
+rmax = max(roads);
+rmin = min(roads);
+rdist = rmax - rmin;
+gridsize = rdist / 10;
+
+roadGrid = zeros(gridsize(1),gridsize(2));
+
+for i=1:size(roads,1)/2
+    roadStart = roads(2*i-1,1:2);
+    roadEnd = roads(2*i,1:2);
+
+    if (roadStart(2) - roadEnd(2)) == 0
+        roadColumn = ((roadStart(2) - 5)/10) + 1;
+        roadGrid(:,roadColumn) = 1;
+    else
+        roadRow = ((roadStart(1) - 5)/10) + 1;
+%             disp(roadRow);
+        roadGrid(roadRow,:) = 1;
+    end
+end
+roadGrid(goalGridPosition(1),goalGridPosition(2)) = 3;
+roadGrid = flip(flip(roadGrid),2);
+
+% 
+% while simulate(scenario, roadGrid, rewardValues, gridsize, goalGridPosition)
 % 
 % end
-simulate(scenario, roads);
+% simulate(scenario, roads, rewardValues);
