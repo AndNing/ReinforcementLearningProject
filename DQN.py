@@ -1,0 +1,59 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class DQN(nn.Module):
+    def __init__(self, input_shape, n_actions):
+        super(DQN, self).__init__()
+
+        self.rconv1 = nn.Conv2d(1, 16, kernel_size=2, stride=1)
+        self.rbatch1 = nn.BatchNorm2d(16)
+        self.rconv2 = nn.Conv2d(16, 32, kernel_size=2, stride=1)
+        self.rbatch2 = nn.BatchNorm2d(32)
+        self.rconv3 = nn.Conv2d(32, 32, kernel_size=2, stride=1)
+        self.rbatch = nn.BatchNorm2d(32)
+
+        self.cconv1 = nn.Conv2d(1, 16, kernel_size=2, stride=1)
+        self.cbatch1 = nn.BatchNorm2d(16)
+        self.cconv2 = nn.Conv2d(16, 32, kernel_size=2, stride=1)
+        self.cbatch2 = nn.BatchNorm2d(32)
+        self.cconv3 = nn.Conv2d(32, 32, kernel_size=2, stride=1)
+        self.cbatch3 = nn.BatchNorm2d(32)
+
+        self.flat = nn.Flatten()
+        self.fc1 = nn.Linear(32*input_shape[0]*input_shape[1], 16)
+        self.fc2 = nn.Linear(16, 4)
+        self.softmax = nn.Softmax(dim=1)
+
+    def forward(self, r, c):
+        r = F.relu(self.fc1(r))
+        r = F.relu(self.fc2(r))
+        r = self.fc3(r)
+        
+        r = self.rconv1(r)
+        r = self.rbatch1(r)
+        r = F.relu(r)
+        r = self.rconv2(r)
+        r = self.rbatch2(r)
+        r = F.relu(r)
+        r = self.rconv3(r)
+        r = self.rbatch3(r)
+        r = F.relu(r)
+        
+        c = self.cconv1(c)
+        c = self.cbatch1(c)
+        c = F.relu(c)
+        c = self.cconv2(c)
+        c = self.cbatch2(c)
+        c = F.relu(c)
+        c = self.cconv3(c)
+        c = self.cbatch3(c)
+        c = F.relu(c)
+
+        x = torch.cat((r, c), dim=1)
+        x = self.flat(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        # x = self.softmax(x)
+
+        return x

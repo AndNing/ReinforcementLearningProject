@@ -1,7 +1,5 @@
-function [countGrid,roadGrid, egoVehicleGridPosition] = calculategrid(scenario, roadGrid, gridsize)
-    egoVehiclePosition = scenario.Actors(1).Position;
-    egoVehicleGridPosition = ceil(egoVehiclePosition/10);
-    egoVehicleGridPosition = egoVehicleGridPosition(1:2);
+function [countGrid,roadGrid] = calculategrid(scenario, roadGrid, gridsize, egoVehicleGridPosition)
+
     roadGrid(egoVehicleGridPosition(1),egoVehicleGridPosition(2)) = 2;
 
 

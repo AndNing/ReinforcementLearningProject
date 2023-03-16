@@ -1,6 +1,7 @@
-function termination = checktermination(egoVehicleGridPosition,goalGridPosition)
+function running = checktermination(egoVehicleGridPosition,goalGridPosition)
     if egoVehicleGridPosition == goalGridPosition
-        termination = true;
+        running = false;
+        disp(running);
     else
-        termination = false;
+        running = true;
     end

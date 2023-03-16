@@ -1,0 +1,7 @@
+function egovehicleupdate(gridtarget,egoVehiclePosition, sampleTime, egoVehicleSpeed)
+    distance = sampleTime * egoVehicleSpeed;
+    
+
+    
+    
+    

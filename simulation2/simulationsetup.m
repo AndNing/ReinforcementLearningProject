@@ -5,6 +5,7 @@ s = rng(seed);
 
 egoVehiclePositionOffset = 1;
 egoVehiclePosition = [5 5 0];
+egoVehicleSpeed = 3;
 
 numActorVehicles = 3;
 actorVehicleMinSpeed = 1;
@@ -14,7 +15,7 @@ rewardValues.offroad = -10000;
 rewardValues.time = -1;
 rweardValues.vehicle = -50;
 
-goalGridPosition = [1,1];
+goalGridPosition = [13,13];
 
 
 [scenario, egoVehicle, roads] = scenariosetup(sampleTime, stopTime, egoVehiclePosition);
@@ -146,7 +147,8 @@ roadGrid(goalGridPosition(1),goalGridPosition(2)) = 3;
 roadGrid = flip(flip(roadGrid),2);
 
 % 
-% while simulate(scenario, roadGrid, rewardValues, gridsize, goalGridPosition)
-% 
+% running = true;
+% while running
+%     [scenario, running, reward, roadGrid, countGrid] = simulate(scenario, roadGrid, rewardValues, gridsize, goalGridPosition, egoVehicleSpeed, 1);
 % end
 % simulate(scenario, roads, rewardValues);
