@@ -15,7 +15,9 @@ function [countGrid,roadGrid] = calculategrid(scenario, roadGrid, gridsize, egoV
     for i=2:numActors+1
         actorPosition = scenario.Actors(i).Position;
         actorGridPosition = ceil(actorPosition/10);
+        if actorGridPosition(1) <= gridsize(1) && actorGridPosition(2) <= gridsize(2) %%added
         countGrid(actorGridPosition(1),actorGridPosition(2)) = countGrid(actorGridPosition(1),actorGridPosition(2)) + 1;
+        end
     end
     countGrid = flip(flip(countGrid),2);
 end

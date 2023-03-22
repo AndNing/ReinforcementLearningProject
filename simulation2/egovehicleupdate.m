@@ -10,6 +10,18 @@ function newEgoVehiclePosition = egovehicleupdate(egoVehiclePosition, sampleTime
     else %right
         newEgoVehiclePosition(2) = egoVehiclePosition(2) - distance;
     end
+    
+    %added
+    if newEgoVehiclePosition(1) < 0 || newEgoVehiclePosition(1) > 130
+        newEgoVehiclePosition = egoVehiclePosition;
+    end
+
+    if newEgoVehiclePosition(2) < 0 || newEgoVehiclePosition(2) > 130
+        newEgoVehiclePosition = egoVehiclePosition;
+    end
+
+    end
+    
 
 
 
