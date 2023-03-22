@@ -1,8 +1,0 @@
-function [running, reward, roadGrid, countGrid] = simulate(scenario, roadGrid, rewardValues, )
-    temp = advance(scenario);
-    [roadGrid,countGrid,egoVehicleGridPosition] = calculategrid(scenario, roadGrid);
-    running = checkTermination(egoVehicleGridPosition,goalGridPosition);
-    reward = calculatereward(scenario,roadGrid, countGrid, egoVehicleGridPosition, rewardValues);
-
-
-

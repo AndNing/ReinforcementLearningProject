@@ -127,7 +127,7 @@ rmax = max(roads);
 rmin = min(roads);
 rdist = rmax - rmin;
 gridsize = rdist / 10;
-
+% 
 roadGrid = zeros(gridsize(1),gridsize(2));
 
 for i=1:size(roads,1)/2
@@ -145,6 +145,12 @@ for i=1:size(roads,1)/2
 end
 roadGrid(goalGridPosition(1),goalGridPosition(2)) = 3;
 roadGrid = flip(flip(roadGrid),2);
+
+egoVehiclePosition = scenario.Actors(1).Position;
+egoVehicleGridPosition = ceil(egoVehiclePosition/10);
+egoVehicleGridPosition = egoVehicleGridPosition(1:2);
+
+[countGrid,roadGrid] = calculategrid(scenario, roadGrid, gridsize, egoVehicleGridPosition);
 
 % 
 % running = true;
