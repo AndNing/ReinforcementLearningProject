@@ -1,33 +1,40 @@
+clear all
+
 sampleTime = 0.1;
-stopTime = 50;
-seed = 1;
-s = rng(seed);
+stopTime = 100;
+s = setseed(seednum);  % need eng.workspace['seednum'] = some number before this script run
 
 egoVehiclePositionOffset = 1;
-egoVehiclePosition = [5 5 0];
+startpositions = [5 12.5; 5 62.5; 5 112.5];
+
+egoVehiclePosition = [startpositions(randi([1 3],1,1),:),0];
 egoVehicleSpeed = 3;
 
-numActorVehicles = 3;
+numActorVehicles = 5;
 actorVehicleMinSpeed = 1;
 actorVehicleMaxSpeed = 5;
 
 rewardValues.offroad = -10000;
 rewardValues.time = -1;
-rweardValues.vehicle = -50;
+rewardValues.vehicle = -50;
 
-goalGridPosition = [13,13];
 
+endpositions = [13 12; 13 2; 13 7];
+goalGridPosition = endpositions(randi([1 3],1,1),:);
 
 [scenario, egoVehicle, roads] = scenariosetup(sampleTime, stopTime, egoVehiclePosition);
 
-xCor = 0;
-yCor = 0;
-radius = 50;
-theta = 0: pi/10: 2*pi;
-roiCircular(:,1) = xCor+radius*cos(theta);
-roiCircular(:,2) = yCor+radius*sin(theta);
+%xCor = 0;
+%yCor = 0;
+%radius = 50;
+%theta = 0: pi/10: 2*pi;
+%roiCircular(:,1) = xCor+radius*cos(theta);
+%roiCircular(:,2) = yCor+radius*sin(theta);
 
-[startSet2,yaw2] = helperSamplePositions(scenario,numActorVehicles,'ROI',roiCircular);
+roiPolygon = [10 120; 120 120; 120 10; 10 10;];
+
+
+[startSet2,yaw2] = helperSamplePositions(scenario,numActorVehicles,'ROI',roiPolygon);
 for idx = 1 : numActorVehicles
     vehicle(scenario,'Position',startSet2(idx,:),'Yaw',yaw2(idx),'ClassID',2);
 end
@@ -40,7 +47,7 @@ hPlot1 = axes(hPanel1);
 plot(scenario,'Parent',hPlot1);
 title('Points for Selecting Start Positions')
 hold on
-plot(roiCircular(:,1),roiCircular(:,2),'LineWidth',1.2,'Color','k')
+%plot(roiCircular(:,1),roiCircular(:,2),'LineWidth',1.2,'Color','k')
 plot(startSet2(:,1),startSet2(:,2),'ko','MarkerSize',5,'MarkerFaceColor','k');
 
 xlim([-50 190])
@@ -57,11 +64,12 @@ xlim([-50 190])
 ylim([-85 330])
 hold off
 
-roiPolygon = [0 130; 130 130; 130 0; 0 0;];
-numPoints1 = 1;
-goalSet1 = helperSamplePositions(scenario,numPoints1,'ROI',roiPolygon);
+roiPolygon = [0 130; 130 130; 130 0; 0 0; 0 130];
+%roiPolygon = [10 120; 120 120; 120 10; 10 10; 10 120];
+%numPoints1 = 1;
+%goalSet1 = helperSamplePositions(scenario,numPoints1,'ROI',roiPolygon);
 
-numPoints2 = 2;
+numPoints2 = numActorVehicles;
 goalSet2 = helperSamplePositions(scenario,numPoints2,'Lanes',1);
 
 figure
@@ -69,14 +77,14 @@ plot(scenario);
 title('Goal Positions')
 hold on
 plot(roiPolygon(:,1), roiPolygon(:,2),'LineWidth',1.2,'Color','r')
-plot(goalSet1(:,1), goalSet1(:,2),'ro','MarkerSize',5,'MarkerFaceColor','r')
+%plot(goalSet1(:,1), goalSet1(:,2),'ro','MarkerSize',5,'MarkerFaceColor','r')
 plot(goalSet2(:,1),goalSet2(:,2),'bo','MarkerSize',5,'MarkerFaceColor','b')
 xlim([-50 190])
 ylim([-85 310])
 hold off
 
-startPositions =[startSet2];
-goalPositions = [goalSet1;goalSet2];
+startPositions =startSet2;
+goalPositions = goalSet2;
 
 info = helperGenerateWaypoints(scenario,startPositions,goalPositions);
 for indx = 1:length(startPositions)
@@ -146,9 +154,9 @@ end
 roadGrid(goalGridPosition(1),goalGridPosition(2)) = 3;
 roadGrid = flip(flip(roadGrid),2);
 
-% 
-% running = true;
-% while running
-%     [scenario, running, reward, roadGrid, countGrid] = simulate(scenario, roadGrid, rewardValues, gridsize, goalGridPosition, egoVehicleSpeed, 1);
+ 
+running = true;
+%while running
+%     [scenario, running, reward, roadGrid, countGrid] = simulate(scenario, roadGrid, rewardValues, gridsize, goalGridPosition, 1, egoVehicleSpeed);
 % end
-% simulate(scenario, roads, rewardValues);
+ %simulate(scenario, roads, rewardValues);
