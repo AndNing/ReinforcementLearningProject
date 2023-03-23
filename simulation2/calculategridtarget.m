@@ -9,10 +9,12 @@ function gridtarget = calculategridtarget(egoVehicleGridPosition,action, gridsiz
     elseif action == 3 %down
         nextVehicleGridPosition(1) = egoVehicleGridPosition(1) + 1;
         nextVehicleGridPosition(2) = egoVehicleGridPosition(2);
-    else %right
+    elseif action == 4
         nextVehicleGridPosition(1) = egoVehicleGridPosition(1);
         nextVehicleGridPosition(2) = egoVehicleGridPosition(2) + 1;
-    end
+    else
+        nextVehicleGridPosition(1) = egoVehicleGridPosition(1);
+        nextVehicleGridPosition(2) = egoVehicleGridPosition(2);
 
 
     flipgrid = zeros(gridsize(1),gridsize(2));

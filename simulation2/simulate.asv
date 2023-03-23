@@ -1,0 +1,20 @@
+function [scenario, running, reward, updatedR countGrid] = simulate(scenario, rewardValues, gridsize, goalGridPosition, action, egoVehicleSpeed)
+    egoVehiclePosition = scenario.Actors(1).Position;
+
+    % gridtarget = calculategridtarget(egoVehicleGridPosition, action, gridsize);
+    newEgoVehiclePosition = egovehicleupdate(egoVehiclePosition, scenario.SampleTime, egoVehicleSpeed, action);
+    scenario.Actors(1).Position = newEgoVehiclePosition;
+
+    egoVehicleGridPosition = ceil(newEgoVehiclePosition/10);
+    egoVehicleGridPosition = egoVehicleGridPosition(1:2);
+
+    temp = advance(scenario);
+
+    [countGrid,updatedRoadGrid] = calculategrid(scenario, staticRoadGrid, gridsize, egoVehicleGridPosition);
+    running = checktermination(egoVehicleGridPosition,goalGridPosition);
+    reward = calculatereward(updatedRoadGrid, countGrid, egoVehicleGridPosition, rewardValues, goalGridPosition);
+
+
+
+
+

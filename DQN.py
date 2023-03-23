@@ -6,7 +6,7 @@ class DQN(nn.Module):
     def __init__(self, input_shape, n_actions):
         super(DQN, self).__init__()
         
-        kernel_size = 3
+        kernel_size = 13
         stride = 1
         padding = 'same'
 
@@ -17,6 +17,9 @@ class DQN(nn.Module):
         self.rconv3 = nn.Conv2d(32, 32, kernel_size=kernel_size, stride=stride, padding=padding)
         self.rbatch3 = nn.BatchNorm2d(32)
 
+        # self.rconv4 = nn.Conv2d(32, 64, kernel_size=kernel_size, stride=stride, padding=padding)
+        # self.rbatch4 = nn.BatchNorm2d(64)
+
         self.cconv1 = nn.Conv2d(1, 16, kernel_size=kernel_size, stride=stride, padding=padding)
         self.cbatch1 = nn.BatchNorm2d(16)
         self.cconv2 = nn.Conv2d(16, 32, kernel_size=kernel_size, stride=stride, padding=padding)
@@ -25,9 +28,9 @@ class DQN(nn.Module):
         self.cbatch3 = nn.BatchNorm2d(32)
 
         self.flat = nn.Flatten()
-        self.fc1 = nn.LazyLinear(16)
+        self.fc1 = nn.LazyLinear(64)
         self.fc2 = nn.LazyLinear(4)
-        self.softmax = nn.Softmax(dim=1)
+        # self.softmax = nn.Softmax(dim=1)
 
     def forward(self, r, c):
         # r = F.relu(self.fc1(r))
@@ -46,22 +49,26 @@ class DQN(nn.Module):
         r = self.rbatch3(r)
         r = F.relu(r)
 
-        c = c.unsqueeze(1)
-        
-        c = self.cconv1(c)
-        c = self.cbatch1(c)
-        c = F.relu(c)
-        c = self.cconv2(c)
-        c = self.cbatch2(c)
-        c = F.relu(c)
-        c = self.cconv3(c)
-        c = self.cbatch3(c)
-        c = F.relu(c)
+        # r = self.rconv4(r)
+        # r = self.rbatch4(r)
+        # r = F.relu(r)
 
-        x = torch.cat((r, c), dim=1)
-        x = self.flat(x)
+        # c = c.unsqueeze(1)
+        #
+        # c = self.cconv1(c)
+        # c = self.cbatch1(c)
+        # c = F.relu(c)
+        # c = self.cconv2(c)
+        # c = self.cbatch2(c)
+        # c = F.relu(c)
+        # c = self.cconv3(c)
+        # c = self.cbatch3(c)
+        # c = F.relu(c)
+        #
+        # x = torch.add(r, c)
+        x = self.flat(r)
         x = self.fc1(x)
         x = self.fc2(x)
-        x = self.softmax(x)
+        # x = self.softmax(x)
 
         return x

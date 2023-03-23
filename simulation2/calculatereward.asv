@@ -1,4 +1,4 @@
-function [reward,distance] = calculatereward(newEgoVehiclePosition, roadGrid, countGrid, egoVehicleGridPosition, rewardValues, goalGridPosition, running)
+function [reward,distance] = calculatereward(roadGrid, countGrid, egoVehicleGridPosition, rewardValues, goalGridPosition, running)
     temproadGrid = flip(flip(roadGrid),2);
     temproadGrid(egoVehicleGridPosition(1),egoVehicleGridPosition(2)) = 2;
     temproadGrid = flip(flip(temproadGrid),2);
@@ -8,9 +8,8 @@ function [reward,distance] = calculatereward(newEgoVehiclePosition, roadGrid, co
 %     disp(egoVehicleGridPositionY)
 
 
-    distance = norm(newEgoVehiclePosition(1:2) - (goalGridPosition*10 - 5));
-    reward = -distance^2;
-    reward = reward + rewardValues.time;
+    distance = norm(egoVehicleGridPosition - goalGridPosition);
+    reward = distance;
 %     disp(roadGrid)
 %     disp(egoVehicleGridPosition)
 %     disp(countGrid)
@@ -24,5 +23,7 @@ function [reward,distance] = calculatereward(newEgoVehiclePosition, roadGrid, co
         reward = reward + rewardValues.vehicle * countGrid(egoVehicleGridPositionX,egoVehicleGridPositionY);
     elseif running == false
         reward = rewardValues.finish;
+    else
+        reward = reward + rewardValues.time;
     end
 

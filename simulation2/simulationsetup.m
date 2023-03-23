@@ -1,26 +1,34 @@
 clear all
+close all
 
-sampleTime = 0.1;
-stopTime = 100;
-s = setseed(seednum);  % need eng.workspace['seednum'] = some number before this script run
+clear 
+
+rng(1);
+% seednum = randi(100000);
+
+sampleTime = 1;
+stopTime = 100000;
+% s = setseed(seednum);  % need eng.workspace['seednum'] = some number before this script run
 
 egoVehiclePositionOffset = 1;
 startpositions = [5 12.5; 5 62.5; 5 112.5];
 
-egoVehiclePosition = [startpositions(randi([1 3],1,1),:),0];
-egoVehicleSpeed = 3;
+egoVehiclePosition = [startpositions(1,:),0];%[startpositions(randi([1 3],1,1),:),0];
+egoVehicleSpeed = 10;
 
 numActorVehicles = 5;
 actorVehicleMinSpeed = 1;
 actorVehicleMaxSpeed = 5;
 
-rewardValues.offroad = -10000;
-rewardValues.time = -1;
+rewardValues.offroad = 0;
+rewardValues.time = -100;
 rewardValues.vehicle = -50;
+rewardValues.finish = 1000;
+rewardValues.boundary = -10000;
 
 
 endpositions = [13 12; 13 2; 13 7];
-goalGridPosition = endpositions(randi([1 3],1,1),:);
+goalGridPosition = [endpositions(1,:)];% endpositions(randi([1 3],1,1),:);
 
 [scenario, egoVehicle, roads] = scenariosetup(sampleTime, stopTime, egoVehiclePosition);
 
@@ -39,30 +47,30 @@ for idx = 1 : numActorVehicles
     vehicle(scenario,'Position',startSet2(idx,:),'Yaw',yaw2(idx),'ClassID',2);
 end
 
-figScene = figure('Name','AutomaticScenarioGeneration');
-set(figScene,'Position',[0,0,900,500]);
+% figScene = figure('Name','AutomaticScenarioGeneration');
+% set(figScene,'Position',[0,0,900,500]);
+% 
+% hPanel1 = uipanel(figScene,'Position',[0 0 0.5 1]);
+% hPlot1 = axes(hPanel1);
+% plot(scenario,'Parent',hPlot1);
+% title('Points for Selecting Start Positions')
+% hold on
+% %plot(roiCircular(:,1),roiCircular(:,2),'LineWidth',1.2,'Color','k')
+% plot(startSet2(:,1),startSet2(:,2),'ko','MarkerSize',5,'MarkerFaceColor','k');
+% 
+% xlim([-50 190])
+% ylim([-85 330])
+% hold off
 
-hPanel1 = uipanel(figScene,'Position',[0 0 0.5 1]);
-hPlot1 = axes(hPanel1);
-plot(scenario,'Parent',hPlot1);
-title('Points for Selecting Start Positions')
-hold on
-%plot(roiCircular(:,1),roiCircular(:,2),'LineWidth',1.2,'Color','k')
-plot(startSet2(:,1),startSet2(:,2),'ko','MarkerSize',5,'MarkerFaceColor','k');
-
-xlim([-50 190])
-ylim([-85 330])
-hold off
-
-hPanel2 = uipanel(figScene,'Position',[0.5 0 0.5 1]);
-hPlot2 = axes(hPanel2);
-plot(scenario,'Parent',hPlot2);
-title('Start Positions and Vehicle Placement')
-hold on
-plot(startSet2(:,1),startSet2(:,2),'ks','MarkerSize',15,'LineWidth',1.2);
-xlim([-50 190])
-ylim([-85 330])
-hold off
+% hPanel2 = uipanel(figScene,'Position',[0.5 0 0.5 1]);
+% hPlot2 = axes(hPanel2);
+% plot(scenario,'Parent',hPlot2);
+% title('Start Positions and Vehicle Placement')
+% hold on
+% plot(startSet2(:,1),startSet2(:,2),'ks','MarkerSize',15,'LineWidth',1.2);
+% xlim([-50 190])
+% ylim([-85 330])
+% hold off
 
 roiPolygon = [0 130; 130 130; 130 0; 0 0; 0 130];
 %roiPolygon = [10 120; 120 120; 120 10; 10 10; 10 120];
@@ -72,16 +80,16 @@ roiPolygon = [0 130; 130 130; 130 0; 0 0; 0 130];
 numPoints2 = numActorVehicles;
 goalSet2 = helperSamplePositions(scenario,numPoints2,'Lanes',1);
 
-figure
-plot(scenario); 
-title('Goal Positions')
-hold on
-plot(roiPolygon(:,1), roiPolygon(:,2),'LineWidth',1.2,'Color','r')
-%plot(goalSet1(:,1), goalSet1(:,2),'ro','MarkerSize',5,'MarkerFaceColor','r')
-plot(goalSet2(:,1),goalSet2(:,2),'bo','MarkerSize',5,'MarkerFaceColor','b')
-xlim([-50 190])
-ylim([-85 310])
-hold off
+% figure
+% plot(scenario); 
+% title('Goal Positions')
+% hold on
+% plot(roiPolygon(:,1), roiPolygon(:,2),'LineWidth',1.2,'Color','r')
+% %plot(goalSet1(:,1), goalSet1(:,2),'ro','MarkerSize',5,'MarkerFaceColor','r')
+% plot(goalSet2(:,1),goalSet2(:,2),'bo','MarkerSize',5,'MarkerFaceColor','b')
+% xlim([-50 190])
+% ylim([-85 310])
+% hold off
 
 startPositions =startSet2;
 goalPositions = goalSet2;
@@ -144,15 +152,22 @@ for i=1:size(roads,1)/2
 
     if (roadStart(2) - roadEnd(2)) == 0
         roadColumn = ((roadStart(2) - 5)/10) + 1;
-        roadGrid(:,roadColumn) = 1;
+        roadGrid(:,roadColumn) = 10;
     else
         roadRow = ((roadStart(1) - 5)/10) + 1;
 %             disp(roadRow);
-        roadGrid(roadRow,:) = 1;
+        roadGrid(roadRow,:) = 10;
     end
 end
-roadGrid(goalGridPosition(1),goalGridPosition(2)) = 3;
-roadGrid = flip(flip(roadGrid),2);
+roadGrid(goalGridPosition(1),goalGridPosition(2)) = 30;
+staticRoadGrid = flip(flip(roadGrid),2);
+% disp(staticRoadGrid)
+
+egoVehicleGridPosition = ceil(egoVehiclePosition/10);
+egoVehicleGridPosition = egoVehicleGridPosition(1:2);
+% egoVehicleGridPosition = [9 5];
+
+[countGrid,roadGrid] = calculategrid(scenario, staticRoadGrid, gridsize, egoVehicleGridPosition);
 
  
 running = true;

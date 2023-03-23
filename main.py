@@ -1,3 +1,5 @@
+import random
+
 import matlab.engine
 import torch.optim as optim
 import numpy as np
@@ -6,11 +8,12 @@ from DQN import *
 from ReplayMemory import *
 from torchinfo import summary
 
-def choose_action(roadGrid, countGrid):
+def choose_action(roadGrid, countGrid,eps):
     with torch.no_grad():
-        # print(roadGrid.shape,countGrid.shape)
-        action = policy_net(roadGrid.unsqueeze(0), countGrid.unsqueeze(0)).max(1)[1].view(1, 1)
-        print(action.shape,action)
+        if random.random() < EPSILON/(eps):
+            action = torch.tensor([[random.randrange(NUM_ACTIONS)]], device=DEVICE, dtype=torch.int)
+        else:
+            action = policy_net(roadGrid.unsqueeze(0), countGrid.unsqueeze(0)).max(1)[1].view(1, 1)
     return action
 
 def optimize_model():
@@ -20,10 +23,10 @@ def optimize_model():
     transitions = memory.sample(BATCH_SIZE)
     batch = Transition(*zip(*transitions))
 
-    non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, batch.next_state)), dtype=torch.bool)
+    non_final_mask = torch.tensor(tuple(map(lambda s: s[0] is not None, batch.next_state)), dtype=torch.bool)
 
-    non_final_next_states_road = torch.stack([s[0] for s in batch.next_state if s is not None])
-    non_final_next_states_count = torch.stack([s[1] for s in batch.next_state if s is not None])
+    non_final_next_states_road = torch.stack([s[0] for s in batch.next_state if s[0] is not None])
+    non_final_next_states_count = torch.stack([s[1] for s in batch.next_state if s[1] is not None])
 
     state_batch_road = torch.stack([s[0] for s in batch.state])
     state_batch_count = torch.stack([s[1] for s in batch.state])
@@ -38,7 +41,7 @@ def optimize_model():
     # print(state_action_values.shape)
     # print(state_action_values.shape)
 
-    next_state_values = torch.zeros(BATCH_SIZE, device='cpu')
+    next_state_values = torch.zeros(BATCH_SIZE, device=DEVICE)
     with torch.no_grad():
         # print(non_final_next_states_road)
         # print(non_final_next_states_count)
@@ -57,74 +60,93 @@ def optimize_model():
     # print(state_action_values)
     # print(expected_state_action_values)
     loss = criterion(state_action_values, expected_state_action_values)
-    print(loss)
 
     # Optimize the model
     optimizer.zero_grad()
     loss.backward()
     # In-place gradient clipping
-    torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
+    torch.nn.utils.clip_grad_value_(policy_net.parameters(), 1000)
     optimizer.step()
 
+    return loss
 
-# model = DQN((14,14),4)
-# batch_size = 16
+
+# model = DQN((13,13),4)
+# batch_size = 50
 # print(summary(model, input_size=(batch_size, 13, 13)))
 
-NUM_EPISODES = 5
-BATCH_SIZE = 3
-NUM_STEPS = 100
-LEARNING_RATE = 0.01
-MEMORY_SIZE = 10000
-GAMMA = 0.9
+DEVICE = 'cpu'
+
+NUM_EPISODES = 100
+BATCH_SIZE = 50
+NUM_STEPS = 500
+LEARNING_RATE = 0.001
+MEMORY_SIZE = 100000
+GAMMA = 0.99
 TAU = 0.005
+EPSILON = 0.3
 
-# eng = matlab.engine.start_matlab()
-# eng.cd('./simulation2', nargout=0)
+eng = matlab.engine.start_matlab()
+eng.cd('./simulation2', nargout=0)
 
-INPUT_SIZE = (15,15)
+INPUT_SIZE = (13,13)
 NUM_ACTIONS = 4
 
 policy_net = DQN(INPUT_SIZE, NUM_ACTIONS).to('cpu')
-policy_net(torch.ones(2,2).unsqueeze(0),torch.ones(2,2).unsqueeze(0))
+policy_net(torch.ones(INPUT_SIZE).unsqueeze(0),torch.ones(INPUT_SIZE).unsqueeze(0))
 target_net = DQN(INPUT_SIZE, NUM_ACTIONS).to('cpu')
 target_net.load_state_dict(policy_net.state_dict())
 
 optimizer = optim.Adam(policy_net.parameters(), lr=LEARNING_RATE)
 memory = ReplayMemory(MEMORY_SIZE)
 
-# eng.simulationsetup(nargout=0)
+eng.simulationsetup(nargout=0)
 
-# roadGridStatic = eng.workspace['roadGrid']
-# roadGrid = torch.tensor(np.asarray(eng.workspace['roadGrid']),dtype=torch.float).unsqueeze(0)
-# countGrid = torch.tensor(np.asarray(eng.workspace['countGrid']),dtype=torch.float).unsqueeze(0)
-roadGrid = torch.ones(2,2)
-countGrid = torch.zeros(2,2)
-# scenario = eng.workspace['scenario']
 running = True
+steps = 0
 
 for eps in range(NUM_EPISODES):
-    rewards = []
-    for i in range(NUM_STEPS):
-        action = choose_action(roadGrid, countGrid)
-        # (scenario, running, reward, nextRoadGrid, nextCountGrid) = eng.simulate(scenario, roadGridStatic, eng.workspace['rewardValues'], eng.workspace['gridsize'], eng.workspace['goalGridPosition'], action, eng.workspace['egoVehicleSpeed'], nargout=5)
-        # nextRoadGrid = torch.tensor(np.asarray(nextRoadGrid),dtype=torch.float).unsqueeze(0)
-        # nextCountGrid = torch.tensor(np.asarray(nextCountGrid),dtype=torch.float).unsqueeze(0)
+    roadGridStatic = eng.workspace['roadGrid']
+    roadGrid = torch.tensor(np.asarray(eng.workspace['roadGrid']), dtype=torch.float)
+    countGrid = torch.tensor(np.asarray(eng.workspace['countGrid']), dtype=torch.float)
+    scenario = eng.workspace['scenario']
 
-        nextRoadGrid = torch.ones(2,2)
-        nextCountGrid = torch.zeros(2,2)
+    totalreward = 0
+    loss = 0
+    steps = 0
+    running = True
+    while running and steps < NUM_STEPS:
+        steps += 1
+        # action = choose_action(roadGrid, countGrid, eps+1).item()
+        action = steps % 4
+        (scenario, running, reward, nextRoadGrid, nextCountGrid, distance) = eng.simulate(scenario, eng.workspace['rewardValues'], eng.workspace['gridsize'], eng.workspace['goalGridPosition'], action+1, eng.workspace['egoVehicleSpeed'], eng.workspace['staticRoadGrid'], nargout=6)
+        nextRoadGrid = torch.tensor(np.asarray(nextRoadGrid),dtype=torch.float)
+        nextCountGrid = torch.tensor(np.asarray(nextCountGrid),dtype=torch.float)
+        # print(action)
 
-        reward = 1
+        totalreward = totalreward + reward
+
+        if running == False:
+            nextRoadGrid = None
+            nextCountGrid = None
 
         memory.push((roadGrid, countGrid), torch.tensor([action]), (nextRoadGrid, nextCountGrid), torch.tensor([reward]))
 
-        optimize_model()
+        loss = optimize_model()
+
+        # if steps % 10 == 0:
+        #     print(loss)
 
         roadGrid = nextRoadGrid
         countGrid = nextCountGrid
 
-        target_net_state_dict = target_net.state_dict()
-        policy_net_state_dict = policy_net.state_dict()
-        for key in policy_net_state_dict:
-            target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
-        target_net.load_state_dict(target_net_state_dict)
+        if steps % 20 == 0:
+            target_net_state_dict = target_net.state_dict()
+            policy_net_state_dict = policy_net.state_dict()
+            # for key in policy_net_state_dict:
+            #     target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
+            target_net.load_state_dict(target_net_state_dict)
+            print(totalreward)
+
+    print('Episode: ', eps, 'Steps: ', steps, 'Loss: ', loss, 'Total Reward: ', totalreward)
+    eng.simulationsetup(nargout=0)

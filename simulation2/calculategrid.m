@@ -1,6 +1,7 @@
 function [countGrid,roadGrid] = calculategrid(scenario, roadGrid, gridsize, egoVehicleGridPosition)
-
-    roadGrid(egoVehicleGridPosition(1),egoVehicleGridPosition(2)) = 2;
+    roadGrid = flip(flip(roadGrid),2);
+    roadGrid(egoVehicleGridPosition(1),egoVehicleGridPosition(2)) = 20;
+    roadGrid = flip(flip(roadGrid),2);
 
 
     numActors = size(scenario.Actors,2)-1;

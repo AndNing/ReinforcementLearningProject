@@ -1,4 +1,4 @@
-function [scenario, running, reward, roadGrid, countGrid] = simulate(scenario, roadGrid, rewardValues, gridsize, goalGridPosition, action, egoVehicleSpeed)
+function [scenario, running, reward, updatedRoadGrid, countGrid, distance] = simulate(scenario, rewardValues, gridsize, goalGridPosition, action, egoVehicleSpeed, staticRoadGrid)
     egoVehiclePosition = scenario.Actors(1).Position;
 
     % gridtarget = calculategridtarget(egoVehicleGridPosition, action, gridsize);
@@ -7,12 +7,13 @@ function [scenario, running, reward, roadGrid, countGrid] = simulate(scenario, r
 
     egoVehicleGridPosition = ceil(newEgoVehiclePosition/10);
     egoVehicleGridPosition = egoVehicleGridPosition(1:2);
+%     disp(egoVehicleGridPosition)
 
     temp = advance(scenario);
 
-    [countGrid,roadGrid] = calculategrid(scenario, roadGrid, gridsize, egoVehicleGridPosition);
+    [countGrid,updatedRoadGrid] = calculategrid(scenario, staticRoadGrid, gridsize, egoVehicleGridPosition);
     running = checktermination(egoVehicleGridPosition,goalGridPosition);
-    reward = calculatereward(roadGrid, countGrid, egoVehicleGridPosition, rewardValues);
+    [reward,distance] = calculatereward(newEgoVehiclePosition,staticRoadGrid, countGrid, egoVehicleGridPosition, rewardValues, goalGridPosition, running);
 
 
 

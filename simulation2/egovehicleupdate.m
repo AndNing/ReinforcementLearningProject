@@ -12,11 +12,11 @@ function newEgoVehiclePosition = egovehicleupdate(egoVehiclePosition, sampleTime
     end
     
     %added
-    if newEgoVehiclePosition(1) < 0 || newEgoVehiclePosition(1) > 130
+    if newEgoVehiclePosition(1) <= 0 || newEgoVehiclePosition(1) > 130
         newEgoVehiclePosition = egoVehiclePosition;
     end
 
-    if newEgoVehiclePosition(2) < 0 || newEgoVehiclePosition(2) > 130
+    if newEgoVehiclePosition(2) <= 0 || newEgoVehiclePosition(2) > 130
         newEgoVehiclePosition = egoVehiclePosition;
     end
 
