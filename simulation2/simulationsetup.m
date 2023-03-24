@@ -23,7 +23,7 @@ actorVehicleMaxSpeed = 5;
 rewardValues.offroad = 0;
 rewardValues.time = -100;
 rewardValues.vehicle = -50;
-rewardValues.finish = 1000;
+rewardValues.finish = 1000000;
 rewardValues.boundary = -10000;
 
 
