@@ -3,7 +3,7 @@ close all
 
 clear 
 
-rng(1);
+rng('shuffle');
 % seednum = randi(100000);
 
 sampleTime = 1;
@@ -13,7 +13,8 @@ stopTime = 100000;
 egoVehiclePositionOffset = 1;
 startpositions = [5 12.5; 5 62.5; 5 112.5];
 
-egoVehiclePosition = [startpositions(1,:),0];%[startpositions(randi([1 3],1,1),:),0];
+% egoVehiclePosition = [startpositions(1,:),0];
+egoVehiclePosition = [startpositions(randi([1 3],1,1),:),0];
 egoVehicleSpeed = 10;
 
 numActorVehicles = 5;
@@ -21,14 +22,15 @@ actorVehicleMinSpeed = 1;
 actorVehicleMaxSpeed = 5;
 
 rewardValues.offroad = 0;
-rewardValues.time = -100;
-rewardValues.vehicle = -50;
-rewardValues.finish = 1000000;
+rewardValues.time = -1;
+rewardValues.vehicle = 0;
+rewardValues.finish = 1000;
 rewardValues.boundary = -10000;
 
 
-endpositions = [13 12; 13 2; 13 7];
-goalGridPosition = [endpositions(1,:)];% endpositions(randi([1 3],1,1),:);
+endpositions = [13 12; 13 2; 13 7; 13 13; 13 1; 13 3; 13 4; 13 5; 13 6; 13 8; 13 9; 13 10; 13 11];
+% goalGridPosition = [endpositions(1,:)];
+goalGridPosition = endpositions(randi([1 13],1,1),:);
 
 [scenario, egoVehicle, roads] = scenariosetup(sampleTime, stopTime, egoVehiclePosition);
 

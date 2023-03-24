@@ -86,7 +86,7 @@ class DQN(nn.Module):
         #
         x = torch.add(r, c)
         # x = torch.add(x, d)
-        x = self.flat(r)
+        x = self.flat(x)
         x = self.fc1(x)
         x = self.fc2(x)
         # x = self.softmax(x)

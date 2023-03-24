@@ -8,8 +8,12 @@ function [reward,distance] = calculatereward(newEgoVehiclePosition, roadGrid, co
 %     disp(egoVehicleGridPositionY)
 
 
-    distance = norm(newEgoVehiclePosition(1:2) - (goalGridPosition*10 - 5));
-    reward = -distance;
+%     distance = norm(newEgoVehiclePosition(1:2) - (goalGridPosition*10 - 5));
+%     reward = -distance/10;
+    distancex = abs(newEgoVehiclePosition(1) - (goalGridPosition(1)*10-5));
+    distancey = abs(newEgoVehiclePosition(2) - (goalGridPosition(2)*10-5));
+    distance = distancex + distancey;
+    reward = -distance/10;
     reward = reward + rewardValues.time;
 %     disp(roadGrid)
 %     disp(egoVehicleGridPosition)

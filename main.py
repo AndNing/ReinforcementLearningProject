@@ -7,16 +7,18 @@ import torch
 from DQN import *
 from ReplayMemory import *
 from torchinfo import summary
+import math
 
-def choose_action(roadGridPosition, roadGridTarget, roadGridRoads,eps):
+def choose_action(roadGridPosition, roadGridTarget, roadGridRoads,steps):
     with torch.no_grad():
-        if random.random() < EPSILON:
+        epsilon = epsilon_by_frame(steps)
+        if random.random() < epsilon:
             action = torch.tensor([[random.randrange(NUM_ACTIONS)]], device=DEVICE, dtype=torch.int)
         else:
             # action = policy_net(roadGrid.unsqueeze(0), countGrid.unsqueeze(0)).max(1)[1].view(1, 1)
             action = policy_net(roadGridPosition.unsqueeze(0),roadGridTarget.unsqueeze(0), roadGridRoads.unsqueeze(0)).max(1)[1].view(1, 1)
 
-    return action
+    return action, epsilon
 
 def optimize_model():
     if len(memory) < BATCH_SIZE:
@@ -78,7 +80,7 @@ def optimize_model():
     optimizer.zero_grad()
     loss.backward()
     # In-place gradient clipping
-    torch.nn.utils.clip_grad_value_(policy_net.parameters(), 1000)
+    torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
     optimizer.step()
 
     return loss
@@ -90,14 +92,18 @@ def optimize_model():
 
 DEVICE = 'cpu'
 
-NUM_EPISODES = 100
-BATCH_SIZE = 50
-NUM_STEPS = 500
-LEARNING_RATE = 0.001
+NUM_EPISODES = 1000
+BATCH_SIZE = 25
+NUM_STEPS = 1000
+LEARNING_RATE = 0.00001
 MEMORY_SIZE = 100000
 GAMMA = 0.99
 TAU = 0.005
-EPSILON = 0.2
+EPSILON_START = 1.0
+EPSILON_FINAL = 0.01
+EPSILON_DECAY = 2000
+
+epsilon_by_frame = lambda frame_idx: EPSILON_FINAL + (EPSILON_START - EPSILON_FINAL) * math.exp(-1. * frame_idx / EPSILON_DECAY)
 
 eng = matlab.engine.start_matlab()
 eng.cd('./simulation2', nargout=0)
@@ -117,6 +123,7 @@ eng.simulationsetup(nargout=0)
 
 running = True
 steps = 0
+totalsteps = 0
 
 for eps in range(NUM_EPISODES):
     roadGridStatic = eng.workspace['roadGrid']
@@ -128,13 +135,16 @@ for eps in range(NUM_EPISODES):
     scenario = eng.workspace['scenario']
 
     totalreward = 0
+
     loss = 0
     steps = 0
     running = True
     while running and steps < NUM_STEPS:
         steps += 1
+        totalsteps += 1
         # action = choose_action(roadGrid, countGrid, eps+1).item()
-        action = choose_action(roadGridPosition, roadGridTarget, roadGridTarget, eps+1).item()
+        action,epsilon = choose_action(roadGridPosition, roadGridTarget, roadGridTarget, totalsteps)
+        action = action.item()
 
         # action = steps % 4
         # action = 1
@@ -157,14 +167,14 @@ for eps in range(NUM_EPISODES):
 
         if running == False:
             nextRoadGrid = None
+            nextRoadGridPosition = None
+            nextRoadGridRoads = None
+            nextRoadGridTarget = None
             nextCountGrid = None
 
         # memory.push((roadGrid, countGrid), torch.tensor([action]), (nextRoadGrid, nextCountGrid), torch.tensor([reward]))
-        memory.push((nextRoadGridPosition, nextRoadGridTarget, nextRoadGridRoads), torch.tensor([action]), (nextRoadGridRoads, nextRoadGridPosition, nextRoadGridTarget), torch.tensor([reward]))
+        memory.push((roadGridPosition, roadGridTarget, roadGridRoads), torch.tensor([action]), (nextRoadGridPosition, nextRoadGridTarget, nextRoadGridRoads), torch.tensor([reward]))
         loss = optimize_model()
-
-        if steps % 50 == 0:
-            print(loss)
 
 
         roadGridPosition = nextRoadGridPosition
@@ -172,13 +182,13 @@ for eps in range(NUM_EPISODES):
         roadGridRoads = nextRoadGridRoads
         countGrid = nextCountGrid
 
-        if steps % 20 == 0:
+        if steps % 100 == 0:
             target_net_state_dict = target_net.state_dict()
             policy_net_state_dict = policy_net.state_dict()
             # for key in policy_net_state_dict:
             #     target_net_state_dict[key] = policy_net_state_dict[key]*TAU + target_net_state_dict[key]*(1-TAU)
-            target_net.load_state_dict(target_net_state_dict)
-            print(totalreward)
+            target_net.load_state_dict(policy_net_state_dict)
+            print(totalreward, loss, totalsteps, epsilon)
 
     print('Episode: ', eps, 'Steps: ', steps, 'Loss: ', loss, 'Total Reward: ', totalreward)
     eng.simulationsetup(nargout=0)
