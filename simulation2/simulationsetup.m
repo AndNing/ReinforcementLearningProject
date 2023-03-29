@@ -1,36 +1,32 @@
-clear all
 close all
 
-clear 
-
-rng('shuffle');
-% seednum = randi(100000);
+%rng('shuffle');
 
 sampleTime = 1;
 stopTime = 100000;
-% s = setseed(seednum);  % need eng.workspace['seednum'] = some number before this script run
 
 egoVehiclePositionOffset = 1;
+%startpositions = [5 12.5; 5 62.5; 5 112.5; 57.5 5; 107.5, 5; 57.5 125; 107.5 125];
 startpositions = [5 12.5; 5 62.5; 5 112.5];
-
-% egoVehiclePosition = [startpositions(1,:),0];
+%egoVehiclePosition =[startpositions(1,:),0];
 egoVehiclePosition = [startpositions(randi([1 3],1,1),:),0];
+
 egoVehicleSpeed = 10;
 
 numActorVehicles = 5;
 actorVehicleMinSpeed = 1;
 actorVehicleMaxSpeed = 5;
 
-rewardValues.offroad = 0;
-rewardValues.time = -1;
-rewardValues.vehicle = 0;
-rewardValues.finish = 1000;
-rewardValues.boundary = -10000;
+rewardValues.offroad = -10;
+rewardValues.time = -0.1;
+rewardValues.vehicle = -0.05;
+rewardValues.finish = 10;
+rewardValues.boundary = -10;
 
 
-endpositions = [13 12; 13 2; 13 7; 13 13; 13 1; 13 3; 13 4; 13 5; 13 6; 13 8; 13 9; 13 10; 13 11];
-% goalGridPosition = [endpositions(1,:)];
-goalGridPosition = endpositions(randi([1 13],1,1),:);
+endpositions = [13 12; 13 2; 13 7];
+%goalGridPosition = endpositions(3,:);
+goalGridPosition = endpositions(randi([1 3],1,1),:);
 
 [scenario, egoVehicle, roads] = scenariosetup(sampleTime, stopTime, egoVehiclePosition);
 
@@ -105,13 +101,13 @@ for indx = 1:length(startPositions)
 end
 
 
-figScene = figure;
-set(figScene,'Position',[0,0,600,600]);
-movegui(figScene,'center');
-hPanel = uipanel(figScene,'Position',[0 0 1 1]);
-hPlot = axes(hPanel);
-plot(scenario,'Parent',hPlot);
-title('Generated Scenario')
+%figScene = figure;
+%set(figScene,'Position',[0,0,600,600]);
+%movegui(figScene,'center');
+%hPanel = uipanel(figScene,'Position',[0 0 1 1]);
+%hPlot = axes(hPanel);
+%plot(scenario,'Parent',hPlot);
+%title('Generated Scenario')
 
 
 % Open the Simulink system block
@@ -163,13 +159,13 @@ for i=1:size(roads,1)/2
 end
 roadGrid(goalGridPosition(1),goalGridPosition(2)) = 30;
 staticRoadGrid = flip(flip(roadGrid),2);
-% disp(staticRoadGrid)
+
 
 egoVehicleGridPosition = ceil(egoVehiclePosition/10);
 egoVehicleGridPosition = egoVehicleGridPosition(1:2);
 % egoVehicleGridPosition = [9 5];
 
-[countGrid,roadGrid] = calculategrid(scenario, staticRoadGrid, gridsize, egoVehicleGridPosition);
+[countGrid,updatedRoadGrid] = calculategrid(scenario, staticRoadGrid, gridsize, egoVehicleGridPosition);
 
  
 running = true;

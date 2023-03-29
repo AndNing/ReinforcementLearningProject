@@ -1,32 +1,27 @@
-function [reward,distance] = calculatereward(newEgoVehiclePosition, roadGrid, countGrid, egoVehicleGridPosition, rewardValues, goalGridPosition, running)
+function [reward] = calculatereward(newEgoVehiclePosition, roadGrid, countGrid, egoVehicleGridPosition, rewardValues, goalGridPosition_flipped, running, egoVehiclePosition)
+%   egoVehicleGridPosition is not flipped
     temproadGrid = flip(flip(roadGrid),2);
-    temproadGrid(egoVehicleGridPosition(1),egoVehicleGridPosition(2)) = 2;
+    temproadGrid(egoVehicleGridPosition(1),egoVehicleGridPosition(2)) = 20;
     temproadGrid = flip(flip(temproadGrid),2);
-%     disp(temproadGrid)
-    [egoVehicleGridPositionX, egoVehicleGridPositionY] = find(temproadGrid==2);
-%     disp(egoVehicleGridPositionX)
-%     disp(egoVehicleGridPositionY)
+
+    [egoVehicleGridPositionX, egoVehicleGridPositionY] = find(temproadGrid==20);
+    egoVehicleGridPosition_flipped = [egoVehicleGridPositionX, egoVehicleGridPositionY];
+
+    distance = sum(abs(egoVehicleGridPosition_flipped - goalGridPosition_flipped));
+    %reward = 300 - distance^2;
+    gridsize = size(temproadGrid);
+    distance =  distance / (gridsize(1) + gridsize(2) - 2);
+    reward = -distance + rewardValues.time;
 
 
-%     distance = norm(newEgoVehiclePosition(1:2) - (goalGridPosition*10 - 5));
-%     reward = -distance/10;
-    distancex = abs(newEgoVehiclePosition(1) - (goalGridPosition(1)*10-5));
-    distancey = abs(newEgoVehiclePosition(2) - (goalGridPosition(2)*10-5));
-    distance = distancex + distancey;
-    reward = -distance/10;
-    reward = reward + rewardValues.time;
-%     disp(roadGrid)
-%     disp(egoVehicleGridPosition)
-%     disp(countGrid)
     if roadGrid(egoVehicleGridPositionX,egoVehicleGridPositionY) == 0
-        reward = reward + rewardValues.offroad;
+        reward = rewardValues.offroad + reward;
     end
-    if egoVehicleGridPositionX > 13 || egoVehicleGridPositionX <= 0
-        reward = reward + rewardValues.boundary;
+    if  isequal(egoVehiclePosition, newEgoVehiclePosition)
+          reward = reward +  rewardValues.boundary;
+
     end
-    if egoVehicleGridPositionY > 13 || egoVehicleGridPositionY <= 0
-        reward = reward + rewardValues.boundary;
-    end
+
     if countGrid(egoVehicleGridPositionX,egoVehicleGridPositionY) > 0
         reward = reward + rewardValues.vehicle * countGrid(egoVehicleGridPositionX,egoVehicleGridPositionY);
     end
