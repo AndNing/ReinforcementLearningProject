@@ -17,7 +17,7 @@ class RainbowDQNAgent:
     """DQN Agent interacting with environment.
 
     Attribute:
-        env (gym.Env): openAI Gym environment
+        env (matlabenv): Matlab environment
         memory (PrioritizedReplayBuffer): replay memory to store transitions
         batch_size (int): batch size for sampling
         target_update (int): period for target model's hard update
@@ -58,7 +58,7 @@ class RainbowDQNAgent:
         """Initialization.
 
         Args:
-            env (gym.Env): openAI Gym environment
+            env (matlabenv): Matlab environment
             memory_size (int): length of memory
             batch_size (int): batch size for sampling
             target_update (int): period for target model's hard update
@@ -265,29 +265,6 @@ class RainbowDQNAgent:
 
         self.env.close()
         return (losses, scores, discounted_total)
-
-    def test(self, video_folder: str) -> None:
-        """Test the agent."""
-        self.is_test = True
-
-        # for recording a video
-        naive_env = self.env
-        state = self.env.reset()
-        done = False
-        score = 0
-
-        while not done:
-            action = self.select_action(state)
-            next_state, reward, done = self.step(action)
-
-            state = next_state
-            score += reward
-
-        print("score: ", score)
-        self.env.close()
-
-        # reset
-        self.env = naive_env
 
     def _compute_dqn_loss(self, samples: Dict[str, np.ndarray], gamma: float) -> torch.Tensor:
         """Return categorical dqn loss."""
