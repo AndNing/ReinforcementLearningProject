@@ -19,7 +19,7 @@ class DuelingAgent:
     """DQN Agent interacting with environment.
 
     Attribute:
-        env (gym.Env): Matlab environment
+        env (matlabenv): Matlab environment
         memory (ReplayBuffer): replay memory to store transitions
         batch_size (int): batch size for sampling
         epsilon (float): parameter for epsilon greedy policy
@@ -50,7 +50,7 @@ class DuelingAgent:
         """Initialization.
 
         Args:
-            env (gym.Env): openAI Gym environment
+            env (matlabenv): Matlab environment
             memory_size (int): length of memory
             batch_size (int): batch size for sampling
             target_update (int): period for target model's hard update
