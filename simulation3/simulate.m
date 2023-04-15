@@ -1,5 +1,8 @@
-function [scenario, countGrid, positionGrid, roadGrid, goalGrid, termination, reward] = simulate(scenario, action, egoVehicleSpeed, gridlength, gridsize, goalGridPosition, staticGoalGrid, staticRoadGrid, rewardValues)
+function [scenario, countGrid, positionGrid, done, reward] = simulate(scenario, action, egoVehicleSpeed, gridlength, gridsize, goalGridPosition, staticRoadGrid, rewardValues, gamma)
     egoVehiclePosition = scenario.Actors(1).Position;
+    pastegoVehicleGridPosition = ceil(egoVehiclePosition/gridlength);
+    pastegoVehicleGridPosition = pastegoVehicleGridPosition(1:2);
+
 
     newEgoVehiclePosition = egovehicleupdate(egoVehiclePosition, scenario.SampleTime, egoVehicleSpeed, action, gridlength, gridsize);
     scenario.Actors(1).Position = newEgoVehiclePosition;
@@ -11,11 +14,12 @@ function [scenario, countGrid, positionGrid, roadGrid, goalGrid, termination, re
     positionGrid = calculatepositiongrid(egoVehicleGridPosition, gridsize);
     countGrid = calculatecountgrid(scenario, gridsize, gridlength);
 
-    termination = checktermination(egoVehicleGridPosition,goalGridPosition);
-    reward = calculatereward(egoVehicleGridPosition, egoVehiclePosition, newEgoVehiclePosition, goalGridPosition,gridsize, rewardValues, staticRoadGrid, countGrid,termination);
+    done = checkdone(egoVehicleGridPosition,goalGridPosition);
+    reward = calculatereward(pastegoVehicleGridPosition, egoVehiclePosition, egoVehicleGridPosition, newEgoVehiclePosition, goalGridPosition,gridsize, rewardValues, staticRoadGrid, countGrid,gamma,done);
 
     % Flip grids at end
-    goalGrid = flip(flip(staticGoalGrid),2);
-    roadGrid = flip(flip(staticRoadGrid),2);
     countGrid = flip(flip(countGrid),2);
     positionGrid = flip(flip(positionGrid),2);
+end
+
+

@@ -55,4 +55,4 @@ function [scenario, roads, gridsize] = scenariosetup(sampleTime, stopTime)
     rmin = min(roads);
     rdist = rmax - rmin;
     gridsize = rdist / 10;
-        
+    

@@ -7,8 +7,15 @@ function countGrid = calculatecountgrid(scenario, gridsize, gridlength)
         actorPosition = scenario.Actors(i).Position;
         actorGridPosition = ceil(actorPosition/gridlength);
 
-        if actorGridPosition(1) <= gridsize(1) && actorGridPosition(2) <= gridsize(2)
-            countGrid(actorGridPosition(1), actorGridPosition(2)) = countGrid(actorGridPosition(1), actorGridPosition(2)) + 1;
+        if actorGridPosition(1) < 1 || actorGridPosition(1) > gridsize(1)
+            continue
         end
+
+        if actorGridPosition(2) < 1 || actorGridPosition(2) > gridsize(2)
+           continue
+        end
+
+        countGrid(actorGridPosition(1),actorGridPosition(2)) = countGrid(actorGridPosition(1),actorGridPosition(2)) + 1;
+
     end
 end

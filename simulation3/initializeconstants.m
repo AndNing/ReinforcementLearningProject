@@ -1,8 +1,5 @@
-% seednum = 1;
-
 sampleTime = 1;
-stopTime = 100000;
-numSteps = 600;
+numSteps = 150;
 
 gridlength = 10;
 
@@ -17,15 +14,15 @@ egoVehicleEndROI = [130 130; 110 0];
 
 actorVehicleMinSpeed = 1;
 actorVehicleMaxSpeed = 5;
-numActorVehicles = 40;
+numActorVehicles = 10;
 actorvehicleStartingDistributionDeviation = 15;
-actorGenerationFrequency = 5;
+actorGenerationFrequency = 10;
 numActorsInitial = 20;
 
-rewardValues.offroad = -10;
-rewardValues.time = -0.1;
-rewardValues.vehicle = -0.05;
+rewardValues.offroad = -1;
+rewardValues.time = -0.05;
+rewardValues.vehicle = -0.1;
 rewardValues.finish = 10;
-rewardValues.boundary = -10;
+rewardValues.boundary = -1;
 
-doPlots = true;
+doPlots = false;

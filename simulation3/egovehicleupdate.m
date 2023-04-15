@@ -22,3 +22,11 @@ function newEgoVehiclePosition = egovehicleupdate(egoVehiclePosition, sampleTime
     end
 
     end
+    
+
+
+
+
+    
+    
+    
