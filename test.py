@@ -59,10 +59,9 @@ support = torch.linspace(v_min, v_max, atom_size).to(device)
 #dqn.load_state_dict(torch.load('model_weights_Dueling.pth'))
 #dqn = VanillaDQN(env.observation_space, env.action_space).to(device)
 #dqn.load_state_dict(torch.load('model_weights_Vanilla.pth'))
-#dqn =Network(env.observation_space, env.action_space, atom_size, support).to(device)
-#dqn.load_state_dict(torch.load('model_weights_Rainbow3.pth'))
-dqn =NoisyDQN(env.observation_space, env.action_space).to(device)
-dqn.load_state_dict(torch.load('model_weights_RainbowwithoutPurple.pth'))
+
+dqn =Network(env.observation_space, env.action_space, atom_size, support).to(device)
+dqn.load_state_dict(torch.load('model_weights_Rainbow3.pth'))
 dqn.eval()
 state = env.reset()
 done = False
@@ -82,6 +81,16 @@ def select_action(state: np.ndarray) -> np.ndarray:
 
     return selected_action
 
+def select_action_Rainbow(state: np.ndarray) -> np.ndarray:
+    """Select an action from the input state."""
+    # NoisyNet: no epsilon greedy action selection
+    selected_action = dqn(
+        torch.FloatTensor(state).to(device)
+    ).argmax()
+    selected_action = selected_action.detach().cpu().numpy()
+
+
+    return selected_action
 
 scores = []
 encounters = []
@@ -97,7 +106,7 @@ for i in range(100):
     off_road = 0
     while not done and not env.termination:
         with torch.no_grad():
-            action = select_action(state)
+            action = select_action_Rainbow(state)
         next_state, reward, done = env.step(action)
         encounter += np.sum(np.multiply(env.countGrid, env.roadGridPosition))
         off_road += np.sum(np.multiply(env.roadGridRoads - 1, -env.roadGridPosition))
@@ -121,5 +130,4 @@ off_road_mean = sum(off_roads) / len(off_roads)
 print("encounter_mean: ", encounter_mean)
 print("off_road_mean: ", off_road_mean)
 print("num_termination: ", num_termination)
-np.savetxt('num_steps_RainbowwithoutPurple.csv', steps, delimiter=',')
 env.close()
