@@ -16,7 +16,7 @@ class VanillaDQNAgent:
     """DQN Agent interacting with environment.
 
     Attribute:
-        env (gym.Env): openAI Gym environment
+        env (matlabenv): = MATLAB environment
         memory (ReplayBuffer): replay memory to store transitions
         batch_size (int): batch size for sampling
         epsilon (float): parameter for epsilon greedy policy
@@ -47,7 +47,7 @@ class VanillaDQNAgent:
         """Initialization.
 
         Args:
-            env (gym.Env): openAI Gym environment
+            env (matlabenv): = MATLAB environment
             memory_size (int): length of memory
             batch_size (int): batch size for sampling
             target_update (int): period for target model's hard update
@@ -194,29 +194,6 @@ class VanillaDQNAgent:
         self.env.close()
         return losses, scores, discounted_total
 
-    def test(self, video_folder: str) -> None:
-        """Test the agent."""
-        self.is_test = True
-
-        # for recording a video
-        naive_env = self.env
-
-        state = self.env.reset()
-        done = False
-        score = 0
-
-        while not done:
-            action = self.select_action(state)
-            next_state, reward, done = self.step(action)
-
-            state = next_state
-            score += reward
-
-        print("score: ", score)
-        self.env.close()
-
-        # reset
-        self.env = naive_env
 
     def _compute_dqn_loss(self, samples: Dict[str, np.ndarray]) -> torch.Tensor:
         """Return dqn loss."""
