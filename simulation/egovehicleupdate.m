@@ -1,3 +1,4 @@
+% Calculate new position for agent vehicle based on action
 function newEgoVehiclePosition = egovehicleupdate(egoVehiclePosition, sampleTime, egoVehicleSpeed, action, gridlength, gridsize)
     distance = sampleTime * egoVehicleSpeed;
 

@@ -1,3 +1,4 @@
+% Grid creation for non-agent vehicles
 function countGrid = calculatecountgrid(scenario, gridsize, gridlength)
     countGrid = zeros(gridsize(1),gridsize(2));
 

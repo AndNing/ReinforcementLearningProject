@@ -1,3 +1,4 @@
+% Initialize MATLAB automated driving toolbox scenario
 function [scenario, roads, gridsize] = scenariosetup(sampleTime, stopTime)
     scenario = drivingScenario('SampleTime',sampleTime, 'StopTime', stopTime);
 

@@ -1,3 +1,4 @@
+% Simulation step (called from Python)
 function [scenario, countGrid, positionGrid, done, reward] = simulate(scenario, action, egoVehicleSpeed, gridlength, gridsize, goalGridPosition, staticRoadGrid, rewardValues, gamma)
     egoVehiclePosition = scenario.Actors(1).Position;
     pastegoVehicleGridPosition = ceil(egoVehiclePosition/gridlength);

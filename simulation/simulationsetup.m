@@ -1,36 +1,36 @@
 close all
 
-% rng shuffle
 initializeconstants
-%stopTime = 10000;
-%gamma = 0.99;
 [scenario, roads, gridsize] = scenariosetup(sampleTime, stopTime);
 
+% Probability distribution for choosing starting/end positions for agent
+% vehicle
 pdEgoVehicleTopBot = makedist('Uniform','Lower',0,'Upper',gridsize(2)*gridlength);
 pdEgoVehicleLeftRight = makedist('Uniform','Lower',0,'Upper',gridsize(1)*gridlength);
 
-% Left
+% Choosing starting and end positions
+% Left start
 if randi(4) == 1
     egoX = random(pdEgoVehicleLeftRight);
     egoVehicleStartPosition = [egoX,125,0];
 
     egoX = random(pdEgoVehicleLeftRight);
     egoVehicleEndPosition = [egoX,5,0];
-% Right
+% Right start
 elseif randi(4) == 2
     egoX = random(pdEgoVehicleLeftRight);
     egoVehicleStartPosition = [egoX,5,0];
 
     egoX = random(pdEgoVehicleLeftRight);
     egoVehicleEndPosition = [egoX,125,0];
-% Top
+% Top start
 elseif randi(4) == 3
     egoY = random(pdEgoVehicleTopBot);
     egoVehicleStartPosition = [125,egoY,0];
 
     egoY = random(pdEgoVehicleTopBot);
     egoVehicleEndPosition = [5,egoY,0];
-% Bot
+% Bottom start
 else
     egoY = random(pdEgoVehicleTopBot);
     egoVehicleStartPosition = [5,egoY,0];
@@ -62,7 +62,8 @@ if doPlots
     hold off
 end
 
-
+% Probability distribution for choosing starting/end positions of non-agent
+% vehicles
 actorVehicleStartingDistributionMeanTopBot = gridsize(1)*gridlength/2;
 pdTopBot = makedist('Normal','mu',actorVehicleStartingDistributionMeanTopBot,'sigma',actorvehicleStartingDistributionDeviation);
 pdtTopBot = truncate(pdTopBot,0,gridsize(1)*gridlength);
@@ -71,43 +72,37 @@ actorVehicleStartingDistributionMeanLeftRight = gridsize(2)*gridlength/2;
 pdLeftRight = makedist('Normal','mu',actorVehicleStartingDistributionMeanLeftRight,'sigma',actorvehicleStartingDistributionDeviation);
 pdtLeftRight = truncate(pdLeftRight,0,gridsize(2)*gridlength);
 
-%figure
-%x = linspace(-20,140,1000);
-%plot(x,pdf(pdtTopBot,x))
-%hold on
-%plot(x,pdf(pdtLeftRight,x))
-
 startposs = [];
 endposs = [];
 
 steps = 0;
 numerrs = 0;
 
+% Generate starting/end positions
 for t = 1:numActorsInitial
-    %rng shuffle
     steps = steps + 1;
     startDirection = mod(steps,4)+1;
 
-    % Left -> right
+    % Left start -> right
     if startDirection == 1
         startpos = [random(pdtLeftRight),125,0];
         endpos = [random(pdtLeftRight),5,0];
         startposs = [startposs; startpos];
         endposs = [endposs; endpos];
 
-    % Right -> left
+    % Right start -> left
     elseif startDirection == 2
         startpos = [random(pdtLeftRight),5,0];
         endpos = [random(pdtLeftRight),125,0];
         startposs = [startposs; startpos];
         endposs = [endposs; endpos];
-    % Top -> bot
+    % Top start-> bot
     elseif startDirection == 3
         startpos = [125, random(pdtTopBot),0];
         endpos = [5, random(pdtTopBot),0];
         startposs = [startposs; startpos];
         endposs = [endposs; endpos];
-    % Bot -> top
+    % Bot start -> top
     else
         startpos = [5, random(pdtTopBot),0];
         endpos = [125, random(pdtTopBot),0];
@@ -122,6 +117,7 @@ for t = 1:numActorsInitial
         speed = randi([actorVehicleMinSpeed,actorVehicleMaxSpeed],1,1);
         waypts = info(1).waypoints;
         trajectory(actorVehicle,waypts,speed);
+        % Ignore trajectories that can't be created
     catch err
         numerrs = numerrs + 1;
     end
@@ -137,26 +133,26 @@ for t = 1:actorGenerationFrequency:numSteps
     steps = steps + 1;
     startDirection = mod(steps,4)+1;
 
-    % Left -> right
+    % Left start -> right
     if startDirection == 1
         startpos = [random(pdtLeftRight),125,0];
         endpos = [random(pdtLeftRight),5,0];
         startposs = [startposs; startpos];
         endposs = [endposs; endpos];
 
-    % Right -> left
+    % Right start -> left
     elseif startDirection == 2
         startpos = [random(pdtLeftRight),5,0];
         endpos = [random(pdtLeftRight),125,0];
         startposs = [startposs; startpos];
         endposs = [endposs; endpos];
-    % Top -> bot
+    % Top start -> bot
     elseif startDirection == 3
         startpos = [125, random(pdtTopBot),0];
         endpos = [5, random(pdtTopBot),0];
         startposs = [startposs; startpos];
         endposs = [endposs; endpos];
-    % Bot -> top
+    % Bot start -> top
     else
         startpos = [5, random(pdtTopBot),0];
         endpos = [125, random(pdtTopBot),0];
@@ -184,13 +180,14 @@ if doPlots
     hPanel1 = uipanel(figScene,Position=[0 0 0.5 1]);
     hPlot1 = axes(hPanel1);
     plot(scenario,Parent=hPlot1,Meshes="on");
-    title("Simulation")
+    title("Actor Vehicle Trajectories")
     hold on
     plot(startposs(:,1),startposs(:,2),"bo",MarkerSize=5,MarkerFaceColor="b");
     plot(endposs(:,1),endposs(:,2),"go",MarkerSize=5,MarkerFaceColor="g");
     hold off
 end
 
+% Make initial state
 goalGridPosition = ceil(egoVehicleEndPosition/gridlength);
 goalGridPosition = goalGridPosition(1:2);
 
@@ -208,10 +205,7 @@ for i=1:size(roads,1)/2
     end
 end
 
-% For initial state
 roadGrid = flip(flip(staticRoadGrid,2));
-
-% disp(staticRoadGrid)
 
 staticGoalGrid = zeros(gridsize(1),gridsize(2));
 staticGoalGrid(goalGridPosition(1),goalGridPosition(2)) = 1;
@@ -227,7 +221,7 @@ countGrid = calculatecountgrid(scenario,gridsize,gridlength);
 countGrid = flip(flip(countGrid),2);
 done = false;
 
-% Comment this stuff out unless testing
+% Testing simulation step
 %action = 1;
 %while true
 %    [scenario, countGrid, positionGrid, termination, reward] = simulate(scenario, action, egoVehicleSpeed, gridlength, gridsize, goalGridPosition,staticRoadGrid, rewardValues, gamma);
