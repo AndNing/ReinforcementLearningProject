@@ -56,12 +56,12 @@ support = torch.linspace(v_min, v_max, atom_size).to(device)
 
 
 #dqn = DQN(env.observation_space, env.action_space).to(device)
-#dqn.load_state_dict(torch.load('model_weights_Dueling.pth'))
+#dqn.load_state_dict(torch.load('models/model_weights_Dueling.pth'))
 #dqn = VanillaDQN(env.observation_space, env.action_space).to(device)
-#dqn.load_state_dict(torch.load('model_weights_Vanilla.pth'))
+#dqn.load_state_dict(torch.load('models/model_weights_Vanilla.pth'))
 
 dqn =Network(env.observation_space, env.action_space, atom_size, support).to(device)
-dqn.load_state_dict(torch.load('model_weights_Rainbow3.pth'))
+dqn.load_state_dict(torch.load('models/model_weights_Rainbow3.pth'))
 dqn.eval()
 state = env.reset()
 done = False

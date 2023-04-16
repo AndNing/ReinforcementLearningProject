@@ -8,7 +8,7 @@ class matlabenv:
 
         self.seednum = seednum
         self.eng = matlab.engine.start_matlab()
-        self.eng.cd('./simulation3', nargout=0)
+        self.eng.cd('./simulation', nargout=0)
         self.eng.workspace['seednum'] = self.seednum
         self.eng.setseed(nargout=0)
         self.stopTime = stopTime

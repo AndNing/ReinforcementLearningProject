@@ -57,5 +57,5 @@ print('training is complete!')
 
 #torch.save(agent.dqn.state_dict(), 'model_weights_Vanilla.pth')
 #torch.save(agent.dqn.state_dict(), 'model_weights_Dueling.pth')
-torch.save(agent.dqn.state_dict(), 'model_weights_Rainbow3.pth')
+torch.save(agent.dqn.state_dict(), 'models/model_weights_Rainbow3.pth')
 

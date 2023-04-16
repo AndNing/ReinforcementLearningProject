@@ -1,160 +1,235 @@
-[scenario, egoVehicle] = createDrivingScenario;
+close all
 
-lidars = createSensors(scenario);
+% rng shuffle
+initializeconstants
+%stopTime = 10000;
+%gamma = 0.99;
+[scenario, roads, gridsize] = scenariosetup(sampleTime, stopTime);
 
-% Set up sensor configurations for each lidar
-sensorConfigs = cell(numel(lidars),1);
+pdEgoVehicleTopBot = makedist('Uniform','Lower',0,'Upper',gridsize(2)*gridlength);
+pdEgoVehicleLeftRight = makedist('Uniform','Lower',0,'Upper',gridsize(1)*gridlength);
 
-% Fill in sensor configurations
-for i = 1:numel(sensorConfigs)
-    sensorConfigs{i} = helperGetLidarConfig(lidars{i},egoVehicle);
+% Left
+if randi(4) == 1
+    egoX = random(pdEgoVehicleLeftRight);
+    egoVehicleStartPosition = [egoX,125,0];
+
+    egoX = random(pdEgoVehicleLeftRight);
+    egoVehicleEndPosition = [egoX,5,0];
+% Right
+elseif randi(4) == 2
+    egoX = random(pdEgoVehicleLeftRight);
+    egoVehicleStartPosition = [egoX,5,0];
+
+    egoX = random(pdEgoVehicleLeftRight);
+    egoVehicleEndPosition = [egoX,125,0];
+% Top
+elseif randi(4) == 3
+    egoY = random(pdEgoVehicleTopBot);
+    egoVehicleStartPosition = [125,egoY,0];
+
+    egoY = random(pdEgoVehicleTopBot);
+    egoVehicleEndPosition = [5,egoY,0];
+% Bot
+else
+    egoY = random(pdEgoVehicleTopBot);
+    egoVehicleStartPosition = [5,egoY,0];
+
+    egoY = random(pdEgoVehicleTopBot);
+    egoVehicleEndPosition = [125,egoY,0];
 end
 
-% Set up tracker
-tracker = trackerGridRFS('SensorConfigurations',sensorConfigs,...
-    'HasSensorConfigurationsInput',true,...
-    'GridLength',120,...
-    'GridWidth',120,...
-    'GridResolution',2,...
-    'GridOriginInLocal',[-60 -60],...
-    'NumParticles',1e5,...
-    'NumBirthParticles',2e4,...
-    'VelocityLimits',[-15 15;-15 15],...
-    'BirthProbability',0.025,...
-    'ProcessNoise',5*eye(2),...
-    'DeathRate',1e-3,...
-    'FreeSpaceDiscountFactor',1e-2,...
-    'AssignmentThreshold',8,...
-    'MinNumCellsPerCluster',4,...
-    'ClusteringThreshold',4,...
-    'ConfirmationThreshold',[3 4],...
-    'DeletionThreshold',[4 4]);
+disp('Ego Vehicle Starting Position')
+disp(egoVehicleStartPosition)
+disp('Ego Vehicle Goal Position')
+disp(egoVehicleEndPosition)
 
-waypoints = [-40 21.4; 40 21.4];
+egoVehicle = vehicle(scenario, ...
+'ClassID', 1, ...
+'Position', egoVehicleStartPosition, ...
+'Name', 'Ego Vehicle');
 
-refPath = referencePathFrenet(waypoints);
-fig = figure('Units','normalized','Position',[0.1 0.1 0.8 0.8]);
-ax = axes(fig);
-hold(ax,'on');
-plot(scenario,'Parent',ax);
-show(refPath,'Parent',ax);
-xlim(ax,[-120 80]);
-ylim(ax,[-160 40]);
-snapnow;
-
-connector = trajectoryGeneratorFrenet(refPath,'TimeResolution',0.1);
-
-% Visualize path regions for sampling strategy visualization
-pathPoints = closestPoint(refPath, refPath.Waypoints(:,1:2));
-roadS = pathPoints(:,end);
-intersectionS = roadS(2,end);
-intersectionBuffer = 20;
-pathGreen = [interpolate(refPath,linspace(0,intersectionS-intersectionBuffer,20));...
-            nan(1,6);...
-            interpolate(refPath,linspace(intersectionS,roadS(end),100))];
-pathBlue = interpolate(refPath,linspace(intersectionS-intersectionBuffer,roadS(2,end),20));
-hold(ax,'on');
-plot(ax,pathGreen(:,1),pathGreen(:,2),'Color',[0 1 0],'LineWidth',5);
-plot(ax,pathBlue(:,1),pathBlue(:,2),'Color',[0 0 1],'LineWidth',5);
-snapnow;
-
-speedLimit = 3;
-laneWidth = 2.975;
-
-accMax = 3;
-
-vehDims = vehicleDimensions(egoVehicle.Length,egoVehicle.Width);
-collisionValidator = HelperDynamicMapValidator('MaxTimeHorizon',2, ... % Maximum horizon for validation
-    'TimeResolution',connector.TimeResolution, ... % Time steps between trajectory samples
-    'Tracker',tracker, ... % Provide tracker for prediction
-    'ValidPredictionSpan',5, ... % Prediction valid for 5 steps
-    'VehicleDimensions',vehDims); % Provide dimensions of ego
+if doPlots
+    figScene = figure(Name="AutomaticScenarioGeneration");
+    set(figScene,Position=[0,0,900,500]);
+    hPanel1 = uipanel(figScene,Position=[0 0 0.5 1]);
+    hPlot1 = axes(hPanel1);
+    plot(scenario,Parent=hPlot1,Meshes="on");
+    title("Selecting Ego Vehicle Start Positions")
+    hold on
+    plot(egoVehicleStartPosition(:,1),egoVehicleStartPosition(:,2),"bo",MarkerSize=5,MarkerFaceColor="b");
+    plot(egoVehicleEndPosition(:,1),egoVehicleEndPosition(:,2),"bo",MarkerSize=5,MarkerFaceColor="g");
+    hold off
+end
 
 
-display = helperGridBasedPlanningDisplay;
+actorVehicleStartingDistributionMeanTopBot = gridsize(1)*gridlength/2;
+pdTopBot = makedist('Normal','mu',actorVehicleStartingDistributionMeanTopBot,'sigma',actorvehicleStartingDistributionDeviation);
+pdtTopBot = truncate(pdTopBot,0,gridsize(1)*gridlength);
 
-% Initial ego state
-currentEgoState = [-55 21.4 0 0 2 0];
-helperMoveEgoVehicleToState(egoVehicle, currentEgoState);
+actorVehicleStartingDistributionMeanLeftRight = gridsize(2)*gridlength/2;
+pdLeftRight = makedist('Normal','mu',actorVehicleStartingDistributionMeanLeftRight,'sigma',actorvehicleStartingDistributionDeviation);
+pdtLeftRight = truncate(pdLeftRight,0,gridsize(2)*gridlength);
 
-% Initialize pointCloud outputs from each sensor
-ptClouds = cell(numel(lidars),1);
-sensorConfigs = cell(numel(lidars),1);
+%figure
+%x = linspace(-20,140,1000);
+%plot(x,pdf(pdtTopBot,x))
+%hold on
+%plot(x,pdf(pdtLeftRight,x))
 
+startposs = [];
+endposs = [];
 
-% while true
-%    simulate(scenario, accMax, connector, display, intersectionBuffer, intersectionS, laneWidth, lidars, ptClouds, currentEgoState, tracker, collisionValidator, refPath, speedLimit, egoVehicle);
-% end
+steps = 0;
+numerrs = 0;
 
-count = 0;
+for t = 1:numActorsInitial
+    %rng shuffle
+    steps = steps + 1;
+    startDirection = mod(steps,4)+1;
 
-while advance(scenario)
-    % Current simulation time
-    time = scenario.SimulationTime;
+    % Left -> right
+    if startDirection == 1
+        startpos = [random(pdtLeftRight),125,0];
+        endpos = [random(pdtLeftRight),5,0];
+        startposs = [startposs; startpos];
+        endposs = [endposs; endpos];
 
-    count = count + 1;
-    if count > 20
-        waypoints = [40 -50; 40 -60;];
-        refPath = referencePathFrenet(waypoints);
-        connector = trajectoryGeneratorFrenet(refPath,'TimeResolution',0.1);
-    end
-
-    
-    % Poses of objects with respect to ego vehicle
-    tgtPoses = targetPoses(egoVehicle);
-    
-    % Simulate point cloud from each sensor
-    for i = 1:numel(lidars)
-        [ptClouds{i}, isValidTime] = step(lidars{i},tgtPoses,time);
-        sensorConfigs{i} = helperGetLidarConfig(lidars{i},egoVehicle);
-    end
-    
-    % Pack point clouds as sensor data format required by the tracker
-    sensorData = packAsSensorData(ptClouds,sensorConfigs,time);
-    
-    % Call the tracker
-    [tracks, ~, ~, map] = tracker(sensorData,sensorConfigs,time);
-    
-    % Update validator's future predictions using current estimate
-    step(collisionValidator, currentEgoState, map, time);
-    
-    % Sample trajectories using current ego state and some kinematic
-    % parameters
-    [frenetTrajectories, globalTrajectories] = helperGenerateTrajectory(connector, refPath, currentEgoState, speedLimit, laneWidth, intersectionS, intersectionBuffer);
-    
-    % Calculate kinematic feasibility of generated trajectories
-    isKinematicsFeasible = helperKinematicFeasibility(frenetTrajectories,speedLimit,accMax);
-    
-    % Calculate collision validity of feasible trajectories
-    feasibleGlobalTrajectories = globalTrajectories(isKinematicsFeasible);
-    feasibleFrenetTrajectories = frenetTrajectories(isKinematicsFeasible);
-    [isCollisionFree, collisionProb] = isTrajectoryValid(collisionValidator, feasibleGlobalTrajectories);
-    
-    % Calculate costs and final optimal trajectory
-    nonCollidingGlobalTrajectories = feasibleGlobalTrajectories(isCollisionFree);
-    nonCollidingFrenetTrajectories = feasibleFrenetTrajectories(isCollisionFree);
-    nonCollodingCollisionProb = collisionProb(isCollisionFree);
-    costs = helperCalculateTrajectoryCosts(nonCollidingFrenetTrajectories, nonCollodingCollisionProb, speedLimit);
-    
-    % Find optimal trajectory
-    [~,idx] = min(costs);
-    optimalTrajectory = nonCollidingGlobalTrajectories(idx);
-    
-    % Assemble for plotting
-    trajectories = helperAssembleTrajectoryForPlotting(globalTrajectories, ...
-        isKinematicsFeasible, isCollisionFree, idx);
-    
-    % Update display
-    display(scenario, egoVehicle, lidars, ptClouds, tracker, tracks, trajectories, collisionValidator);
-    
-    % Move ego with optimal trajectory
-    if ~isempty(optimalTrajectory)
-        currentEgoState = optimalTrajectory.Trajectory(2,:);
-        helperMoveEgoVehicleToState(egoVehicle, currentEgoState);
+    % Right -> left
+    elseif startDirection == 2
+        startpos = [random(pdtLeftRight),5,0];
+        endpos = [random(pdtLeftRight),125,0];
+        startposs = [startposs; startpos];
+        endposs = [endposs; endpos];
+    % Top -> bot
+    elseif startDirection == 3
+        startpos = [125, random(pdtTopBot),0];
+        endpos = [5, random(pdtTopBot),0];
+        startposs = [startposs; startpos];
+        endposs = [endposs; endpos];
+    % Bot -> top
     else
-        % All trajectories either violated kinematic feasibility
-        % constraints or resulted in a collision. More behaviors on
-        % trajectory sampling may be needed.
-        error('Unable to compute optimal trajectory');
+        startpos = [5, random(pdtTopBot),0];
+        endpos = [125, random(pdtTopBot),0];
+        startposs = [startposs; startpos];
+        endposs = [endposs; endpos];
+    end
+
+    try
+        info = helperGenerateWaypoints(scenario,startpos,endpos);
+        actorVehicle = actor(scenario,'ClassID',1, ...
+        'Position',startpos,'EntryTime',t,'ExitTime',t+50);
+        speed = randi([actorVehicleMinSpeed,actorVehicleMaxSpeed],1,1);
+        waypts = info(1).waypoints;
+        trajectory(actorVehicle,waypts,speed);
+    catch err
+        numerrs = numerrs + 1;
     end
 end
+
+disp(['Number of failed trajectory generation tries: ',num2str(numerrs)])
+
+
+steps = 0;
+numerrs = 0;
+
+for t = 1:actorGenerationFrequency:numSteps
+    steps = steps + 1;
+    startDirection = mod(steps,4)+1;
+
+    % Left -> right
+    if startDirection == 1
+        startpos = [random(pdtLeftRight),125,0];
+        endpos = [random(pdtLeftRight),5,0];
+        startposs = [startposs; startpos];
+        endposs = [endposs; endpos];
+
+    % Right -> left
+    elseif startDirection == 2
+        startpos = [random(pdtLeftRight),5,0];
+        endpos = [random(pdtLeftRight),125,0];
+        startposs = [startposs; startpos];
+        endposs = [endposs; endpos];
+    % Top -> bot
+    elseif startDirection == 3
+        startpos = [125, random(pdtTopBot),0];
+        endpos = [5, random(pdtTopBot),0];
+        startposs = [startposs; startpos];
+        endposs = [endposs; endpos];
+    % Bot -> top
+    else
+        startpos = [5, random(pdtTopBot),0];
+        endpos = [125, random(pdtTopBot),0];
+        startposs = [startposs; startpos];
+        endposs = [endposs; endpos];
+    end
+
+    try
+        info = helperGenerateWaypoints(scenario,startpos,endpos);
+        actorVehicle = actor(scenario,'ClassID',1, ...
+        'Position',startpos,'EntryTime',t,'ExitTime',t+50);
+        speed = randi([actorVehicleMinSpeed,actorVehicleMaxSpeed],1,1);
+        waypts = info(1).waypoints;
+        trajectory(actorVehicle,waypts,speed);
+    catch err
+        numerrs = numerrs + 1;
+    end
+end
+
+disp(['Number of failed trajectory generation tries: ',num2str(numerrs)])
+
+if doPlots
+    figScene = figure(Name="Actor Vehicle Generation");
+    set(figScene,Position=[0,0,900,500]);
+    hPanel1 = uipanel(figScene,Position=[0 0 0.5 1]);
+    hPlot1 = axes(hPanel1);
+    plot(scenario,Parent=hPlot1,Meshes="on");
+    title("Simulation")
+    hold on
+    plot(startposs(:,1),startposs(:,2),"bo",MarkerSize=5,MarkerFaceColor="b");
+    plot(endposs(:,1),endposs(:,2),"go",MarkerSize=5,MarkerFaceColor="g");
+    hold off
+end
+
+goalGridPosition = ceil(egoVehicleEndPosition/gridlength);
+goalGridPosition = goalGridPosition(1:2);
+
+staticRoadGrid = zeros(gridsize(1),gridsize(2));
+for i=1:size(roads,1)/2
+    roadStart = roads(2*i-1,1:2);
+    roadEnd = roads(2*i,1:2);
+
+    if (roadStart(2) - roadEnd(2)) == 0
+        roadColumn = ceil((roadStart(2) - 5)/gridlength) + 1;
+        staticRoadGrid(:,roadColumn) = 1;
+    else
+        roadRow = ceil((roadStart(1) - 5)/gridlength) + 1;
+        staticRoadGrid(roadRow,:) = 1;
+    end
+end
+
+% For initial state
+roadGrid = flip(flip(staticRoadGrid,2));
+
+% disp(staticRoadGrid)
+
+staticGoalGrid = zeros(gridsize(1),gridsize(2));
+staticGoalGrid(goalGridPosition(1),goalGridPosition(2)) = 1;
+goalGrid = flip(flip(staticGoalGrid),2);
+
+positionGrid = zeros(gridsize(1),gridsize(2));
+egoVehicleInitialGridPosition = ceil(egoVehicleStartPosition/gridlength);
+egoVehicleInitialGridPosition = egoVehicleInitialGridPosition(1:2);
+positionGrid(egoVehicleInitialGridPosition(1),egoVehicleInitialGridPosition(2)) = 1;
+positionGrid = flip(flip(positionGrid),2);
+
+countGrid = calculatecountgrid(scenario,gridsize,gridlength);
+countGrid = flip(flip(countGrid),2);
+done = false;
+
+% Comment this stuff out unless testing
+%action = 1;
+%while true
+%    [scenario, countGrid, positionGrid, termination, reward] = simulate(scenario, action, egoVehicleSpeed, gridlength, gridsize, goalGridPosition,staticRoadGrid, rewardValues, gamma);
+%    pause(0.1);
+%end
