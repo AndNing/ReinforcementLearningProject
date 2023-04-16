@@ -18,13 +18,15 @@ from NoisyDQN import *
 import math
 import torch.nn.functional as F
 
-gridx = 13
-gridy = 13
-num_of_grid = 4
-action_space = 4
-stopTime = 1000
-gamma = 0.99
-epsilon_threshold = 0.05
+gridx = 13  ## width of grid
+gridy = 13  ## length of grid
+num_of_grid = 4  ## number of grid
+action_space = 4  ## size of action space
+stopTime = 1000  ## maximum steps per episode
+gamma = 0.99  ## discount rate
+epsilon_threshold = 0.05  ## epsilon threshold for the epsilon-greedy exploration
+
+## parameters for the rainbow DQN
 atom_size = 11
 v_min = -10.0
 v_max = 10.0
@@ -68,6 +70,7 @@ done = False
 score = 0
 step = 0
 
+## action selection for the double and dueling agents
 def select_action(state: np.ndarray) -> np.ndarray:
     """Select an action from the input state."""
     # epsilon greedy policy
@@ -81,6 +84,7 @@ def select_action(state: np.ndarray) -> np.ndarray:
 
     return selected_action
 
+## action selection for the rainbow agent
 def select_action_Rainbow(state: np.ndarray) -> np.ndarray:
     """Select an action from the input state."""
     # NoisyNet: no epsilon greedy action selection
@@ -92,11 +96,11 @@ def select_action_Rainbow(state: np.ndarray) -> np.ndarray:
 
     return selected_action
 
-scores = []
-encounters = []
-off_roads = []
-num_termination = 0
-steps = []
+scores = []  ## dicounted cumulative rewards per episode
+encounters = []  ## number of traffic count per episode
+off_roads = []  ## total number of being off-road per episode
+num_termination = 0  ## number of incomplete episode
+steps = []  ## number of steps per episode
 for i in range(100):
     state = env.reset()
     done = False
