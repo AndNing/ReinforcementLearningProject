@@ -2,6 +2,10 @@ import matlab.engine
 import numpy as np
 import random
 
+"""
+This class creates environment using Autonomous Driving Toolbox in MATLAB
+"""
+
 class matlabenv:
     def __init__(self, num_of_grid, action_space, stopTime, gridx=13, gridy=13, seednum=1, gamma=0.99):
         """Initialization."""
