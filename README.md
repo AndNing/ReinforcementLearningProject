@@ -1,11 +1,11 @@
 # ReinforcementLearningProject
 
-##3 Matlab Dependencies
+### Matlab Dependencies
 - Using MATLAB 2022b
 - Automated Driving Toolbox
 - Statistics and Machine Learning Toolbox
 
-##3 Python dependencies
+### Python dependencies
 - Using python version 3.10
 - Python packages listed in requirements.txt
 
